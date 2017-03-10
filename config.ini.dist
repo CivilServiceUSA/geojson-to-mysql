@@ -1,0 +1,9 @@
+; This is a sample configuration file
+; Replace with your own values
+
+[db]
+host = localhost
+username = username
+password = password
+port = 3306
+dbname = dbname
