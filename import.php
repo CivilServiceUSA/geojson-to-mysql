@@ -2,7 +2,7 @@
 /**
  * GeoJSON to MySQL importer
  *
- * @note this is quick and dirty.  It's more of a proof of concept because it's specific to a single table type and connection parameters are hardcoded.
+ * @todo Don't rely on a database connection to MySQL for escaping
  *
  * @usage php import.php --table district_shapes --keys state_code,district --dir /home/tmp/districts --insert
  */
