@@ -20,7 +20,7 @@ Copy `config.ini.dist` to `config.ini` and add your own values to it.
 To write insert statements out to a file:
 
 ```bash
-php import.php --table district_shapes --keys state_code,district --dir /home/tmp/districts > insert.sql`
+php import.php --table district_shapes --keys state_code,district --dir /home/tmp/districts > insert.sql
 
 ```
 
