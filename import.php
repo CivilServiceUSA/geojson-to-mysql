@@ -19,35 +19,25 @@ define('DB_COLUMNS', explode(',', $options['keys']));
 define('IMPORT_PATH', $options['dir']);
 define('DO_INSERT', (isset($options['insert'])));
 
-$columnTemplate = array();
-
-foreach(DB_COLUMNS as $keyName){
-	$columnTemplate[$keyName] = '';
-}
-
 /**
  * @param $mysqli
- * @param $columnTemplate
  * @param $json
  */
-function createInsert($mysqli, $columnTemplate, $json) {
+function createInsert($mysqli, $json) {
     // Make sure we have a MySQL Connection
     if ($mysqli) {
-        $rowValues = $columnTemplate;
+        $data = array();
 
         foreach(DB_COLUMNS as $keyName){
-            $rowValues[$keyName] = (isset($json['properties'][$keyName])) ? $json['properties'][$keyName] : '';
+            $value = (isset($json['properties'][$keyName])) ? $json['properties'][$keyName] : '';
+            $data[] = $mysqli->real_escape_string($value);
         }
 
-        $setString = ' ';
+        $columns = '`' . implode('`,`', DB_COLUMNS) . '`, `shape`';
+        $values = '"' . implode('","', $data) . '"';
+        $values .= ", ST_GeomFromGeoJSON('".$mysqli->real_escape_string(json_encode($json))."')";
 
-        foreach($rowValues as $keyName => $value){
-            $setString .= "`{$keyName}` = '".$mysqli->real_escape_string($value)."', ";
-        }
-
-        $setString .= " `shape` = ST_GeomFromGeoJSON('".$mysqli->real_escape_string(json_encode($json))."')";
-
-        $query = "INSERT INTO `" . DB_TABLE . "` SET {$setString} ; \r\n";
+        $query = "INSERT INTO `" . DB_TABLE . "` ({$columns}) VALUES ({$values}); \r\n";
 
         if(DO_INSERT){
             if ($mysqli->query($query)) {
@@ -56,18 +46,10 @@ function createInsert($mysqli, $columnTemplate, $json) {
                     $message[] = "'{$json['properties'][$keyName]}' for key '{$keyName}'";
                 }
 
-                if (!DO_INSERT) {
-                    echo "✓ Added entry " . join(', ', $message) . PHP_EOL;
-                }
+                echo "✓ Added entry " . join(', ', $message) . PHP_EOL;
             } else {
-                if (DO_INSERT) {
-                    exit(printf("× %s\n", $mysqli->error));
-                } else {
-                    printf("× %s\n", $mysqli->error);
-                }
+                printf("× %s\n", $mysqli->error);
             }
-
-            //echo $query;
         } else {
             echo $query;
         }
@@ -91,10 +73,10 @@ foreach (glob(IMPORT_PATH . "/*.geojson") as $filePath) {
     // Check if GeoJSON is Feature or FeatureCollection
     if ($json['type'] === 'FeatureCollection') {
         foreach($json['features'] as $feature){
-            createInsert($mysqli, $columnTemplate, $feature);
+            createInsert($mysqli, $feature);
         }
     } else if ($json['type'] === 'Feature') {
-        createInsert($mysqli, $columnTemplate, $json);
+        createInsert($mysqli, $json);
     } else {
         exit('Invalid GeoJSON');
     }
