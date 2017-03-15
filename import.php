@@ -39,6 +39,10 @@ function createInsert($mysqli, $json) {
 
         $query = "INSERT INTO `" . DB_TABLE . "` ({$columns}) VALUES ({$values}); \r\n";
 
+        // Fix some Data Type Issues
+        $query = str_replace('""', 'null', $query);
+        $query = preg_replace('/"(\d+)"/i', '$1', $query);
+
         if(DO_INSERT){
             if ($mysqli->query($query)) {
                 $message = array();
