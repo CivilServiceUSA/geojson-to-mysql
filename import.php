@@ -30,6 +30,9 @@ function createInsert($mysqli, $json) {
 
         foreach(DB_COLUMNS as $keyName){
             $value = (isset($json['properties'][$keyName])) ? $json['properties'][$keyName] : '';
+            if (is_array(($value))) {
+              $value = json_encode($value);
+            }
             $data[] = $mysqli->real_escape_string($value);
         }
 
